@@ -80,7 +80,6 @@ reservation/schedule.json
 reservation/config.json
 
 # Production-specific scripts (contains real domain / paths)
-reservation/run-reservation-nohup.sh
 reservation/scripts/seed.ts
 reservation/scripts/update-bands-only.ts
 reservation/scripts/add-studio-f.ts
