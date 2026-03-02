@@ -130,16 +130,20 @@ music_training_camp_apps/
         └── reservation.db-wal
 ```
 
-### サーバー移行・再セットアップ時の注意
+### 再セットアップ時の注意
 
 `git clone` 後にサービスを起動すると `shared/database/` が新規作成され、
-空のDBでサーバーが立ち上がります。既存データを引き継ぐ場合は必ず以下を実行してください。
+空のDBでサーバーが立ち上がります。DBを用意したら必ず以下も確認してください。
+
+**`.env` の設置**
+
+`reservation/.env` がない状態では管理者ログインと LINE 通知が機能しません。
+`.env.example` を参考に `reservation/.env` を作成してください。
 
 ```bash
-# 旧環境からDBをコピー
-cp /path/to/old/shared/database/reservation.db    shared/database/
-cp /path/to/old/shared/database/reservation.db-shm shared/database/
-cp /path/to/old/shared/database/reservation.db-wal shared/database/
+cp reservation/.env.example reservation/.env
+# → ADMIN_PASSWORD と LINE_CHANNEL_ACCESS_TOKEN を実際の値に編集
 ```
 
-> `.db-shm` / `.db-wal` も一緒にコピーしないとデータが壊れる場合があります。
+> DBファイルをコピーする場合は `.db-shm` / `.db-wal` も必ずセットでコピーしてください。
+> 単体でコピーするとデータが壊れる場合があります。
