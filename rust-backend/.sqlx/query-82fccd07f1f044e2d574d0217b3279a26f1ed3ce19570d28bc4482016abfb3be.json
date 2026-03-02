@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM band_members WHERE band_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "82fccd07f1f044e2d574d0217b3279a26f1ed3ce19570d28bc4482016abfb3be"
+}

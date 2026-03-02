@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR REPLACE INTO bands (id, name, members_json, created_at, version) VALUES (?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "cc7fdcef01cea79452db29e227c25bb39dde1d3037642185ad2a4f84dfdb3b39"
+}

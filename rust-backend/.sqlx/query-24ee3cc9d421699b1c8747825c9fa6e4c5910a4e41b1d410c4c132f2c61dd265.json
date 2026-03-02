@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT names_json as \"names_json!\", types_json as \"types_json!\",\n           version as \"version!\" FROM rooms_config WHERE id = 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "names_json!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "types_json!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "version!",
+        "ordinal": 2,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "24ee3cc9d421699b1c8747825c9fa6e4c5910a4e41b1d410c4c132f2c61dd265"
+}

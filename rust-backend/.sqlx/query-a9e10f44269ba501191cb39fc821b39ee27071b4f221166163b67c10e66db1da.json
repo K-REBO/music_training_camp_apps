@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR IGNORE INTO feedback (id, user_id, user_name, type, title, description, priority, status, created_at, version) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "a9e10f44269ba501191cb39fc821b39ee27071b4f221166163b67c10e66db1da"
+}

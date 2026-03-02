@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE members SET name = ?, grade = ?, line_user_id = ?, version = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "889910303b5519697f530284cc519021e0528a677b36b2f77a3659b834cc4559"
+}

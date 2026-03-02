@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT template as \"template!\" FROM line_template WHERE id = 1",
+  "describe": {
+    "columns": [
+      {
+        "name": "template!",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f9bd4e1d994e53d13ecacfae1f2ea1aff09decece3420e965a6a17b87c1b6725"
+}

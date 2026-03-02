@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE bands SET name = ?, members_json = ?, version = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "a061da8adffd8402b92800375318b7fa78ed4a79c7f590f88c9cc54d88838be2"
+}

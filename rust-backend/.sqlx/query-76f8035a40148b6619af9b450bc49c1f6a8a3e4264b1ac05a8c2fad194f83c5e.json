@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR REPLACE INTO sessions (id, user_id, user_name, grade, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "76f8035a40148b6619af9b450bc49c1f6a8a3e4264b1ac05a8c2fad194f83c5e"
+}

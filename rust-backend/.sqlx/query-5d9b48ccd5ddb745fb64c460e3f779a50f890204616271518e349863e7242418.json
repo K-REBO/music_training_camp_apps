@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT version as \"version!\" FROM feedback WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "version!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5d9b48ccd5ddb745fb64c460e3f779a50f890204616271518e349863e7242418"
+}
