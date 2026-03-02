@@ -1,0 +1,4 @@
+@reservation.db.bk
+scripts/reservation.db
+scripts/*.db-*
+tests/*.png

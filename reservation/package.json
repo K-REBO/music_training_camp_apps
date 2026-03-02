@@ -1,0 +1,42 @@
+{
+  "name": "reservation-system",
+  "version": "0.0.1",
+  "type": "module",
+  "dependencies": {
+    "@sveltejs/kit": "^2.0.0",
+    "devalue": "^5.1.1",
+    "esm-env": "^1.2.2",
+    "playwright": "^1.55.0",
+    "svelte": "^5.0.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@sveltejs/adapter-auto": "^3.0.0",
+    "@sveltejs/vite-plugin-svelte": "^4.0.0",
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.18.1",
+    "autoprefixer": "^10.4.19",
+    "jest": "^29.0.0",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
+    "vite": "^5.0.0",
+    "vitest": "^4.0.18"
+  },
+  "scripts": {
+    "dev": "vite dev --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "start": "bun ./build/index.js"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  }
+}

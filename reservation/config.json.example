@@ -1,0 +1,27 @@
+{
+  "app": {
+    "name": "合宿予約システム",
+    "debug": false
+  },
+  "restrictions": {
+    "consecutive_slots_limit": 3,
+    "daily_personal_limit": 3,
+    "daily_band_limit": 3,
+    "date_restrictions": [
+      "2024-12-31",
+      "2025-01-01"
+    ],
+    "time_restrictions": [
+      "22:00-06:00"
+    ],
+    "room_restrictions": [
+      "スタジオA"
+    ],
+    "room_type_permissions": {
+      "event": ["合宿係"]
+    },
+    "band_restrictions": {
+      "合宿係": ["event"]
+    }
+  }
+}
