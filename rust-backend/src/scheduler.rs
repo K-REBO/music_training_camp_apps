@@ -254,19 +254,35 @@ pub async fn check_and_send_event_notifications(
     Ok(())
 }
 
-/// バックグラウンドスケジューラーを起動する（1分ごとに通知チェック）
+/// 次の JST :50 まで待つ時間を返す
+fn duration_until_next_50_jst() -> time::Duration {
+    let now = Utc::now();
+    let jst = now + Duration::hours(9);
+    let current_minute = jst.minute() as i64;
+    let current_second = jst.second() as i64;
+
+    // :50 より前なら今時間の :50 まで、:50 以降なら次の時間の :50 まで
+    let seconds_to_wait = if current_minute < 50 {
+        (50 - current_minute) * 60 - current_second
+    } else {
+        (110 - current_minute) * 60 - current_second
+    };
+
+    time::Duration::from_secs(seconds_to_wait.max(1) as u64)
+}
+
+/// バックグラウンドスケジューラーを起動する（毎時 :50 に通知チェック）
 pub async fn run_scheduler(pool: SqlitePool, token: String) {
-    info!("🕐 LINE通知スケジューラー起動（60秒間隔）");
+    info!("🕐 LINE通知スケジューラー起動（毎時 :50 に通知チェック）");
     if token.is_empty() {
         warn!("⚠️ LINE_CHANNEL_ACCESS_TOKEN が未設定のため LINE通知は無効");
     }
 
-    let mut interval = tokio::time::interval(time::Duration::from_secs(60));
-    // 最初のティックはスキップ（起動直後を避ける）
-    interval.tick().await;
-
     loop {
-        interval.tick().await;
+        let wait = duration_until_next_50_jst();
+        info!("⏳ 次の通知チェックまで {:.0}分 待機", wait.as_secs_f64() / 60.0);
+        tokio::time::sleep(wait).await;
+
         let now = Utc::now();
 
         if let Err(e) = check_and_send_notifications(&pool, now, &token).await {
@@ -276,7 +292,6 @@ pub async fn run_scheduler(pool: SqlitePool, token: String) {
             error!("❌ イベント通知チェックエラー: {}", e);
         }
 
-        // 定期クリーンアップ（1分ごと）
         let _ = db::cleanup_expired_sessions(&pool).await;
         let _ = db::cleanup_expired_notified(&pool).await;
     }
