@@ -8,7 +8,7 @@ use anyhow::Result;
 use axum::{
     http::{HeaderValue, Method},
     response::Json,
-    routing::{delete, get, post, put},
+    routing::{get, put},
     Router,
 };
 use std::env;
@@ -16,7 +16,7 @@ use tower_http::cors::{Any, CorsLayer};
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::routes::kv::{atomic_update, delete_kv, get_kv, list_kv, set_kv};
+use crate::routes::kv::{delete_kv, get_or_list_kv, put_kv, set_kv};
 use crate::routes::ws::ws_handler;
 use crate::ws_state::new_ws_state;
 
@@ -80,19 +80,17 @@ async fn main() -> Result<()> {
     let app = Router::new()
         // WebSocket
         .route("/ws", get(ws_handler).with_state(ws_combined_state))
-        // KV 互換 API
+        // KV 互換 API（単一 catch-all でパス内分岐）
+        //   GET  /api/kv/list/{prefix...} → リスト取得
+        //   GET  /api/kv/{key...}         → 単一キー取得
+        //   POST /api/kv/{key...}         → セット
+        //   PUT  /api/kv/atomic           → 楽観的ロック更新（path == "atomic"）
+        //   DELETE /api/kv/{key...}       → 削除
         .route(
-            "/api/kv/list/{*prefix}",
-            get(list_kv).with_state(kv_state.clone()),
-        )
-        .route(
-            "/api/kv/atomic",
-            put(atomic_update).with_state(kv_state.clone()),
-        )
-        .route(
-            "/api/kv/{*key}",
-            get(get_kv)
+            "/api/kv/*path",
+            get(get_or_list_kv)
                 .post(set_kv)
+                .put(put_kv)
                 .delete(delete_kv)
                 .with_state(kv_state.clone()),
         )

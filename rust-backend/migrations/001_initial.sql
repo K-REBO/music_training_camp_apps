@@ -1,8 +1,7 @@
 -- Migration 001: Initial schema
 -- Deno KV の KV構造をリレーショナルテーブルに正規化
-
-PRAGMA journal_mode = WAL;
-PRAGMA foreign_keys = ON;
+-- Note: PRAGMA journal_mode=WAL と PRAGMA foreign_keys=ON は
+--       接続オプション（SqliteConnectOptions）で設定するため、ここでは省略
 
 -- メンバーテーブル
 CREATE TABLE IF NOT EXISTS members (
@@ -126,6 +125,20 @@ CREATE TABLE IF NOT EXISTS notified (
     notified_at TEXT NOT NULL,
     expires_at TEXT NOT NULL,     -- 翌日JST 0時
     PRIMARY KEY (date, room_id, slot_id)
+);
+
+-- LINE 登録待ちテーブル
+-- KV キー: ["line_pending", lineUserId]
+CREATE TABLE IF NOT EXISTS line_pending (
+    line_user_id TEXT PRIMARY KEY,
+    display_name TEXT NOT NULL,
+    received_at TEXT NOT NULL
+);
+
+-- 汎用 KV ストア（rooms UUID / timeslots UUID 等、スキーマ外のデータを保存）
+CREATE TABLE IF NOT EXISTS kv_misc (
+    key_json TEXT PRIMARY KEY,   -- JSON 配列 ["rooms", "uuid", ...] 等
+    value_json TEXT NOT NULL
 );
 
 -- インデックス

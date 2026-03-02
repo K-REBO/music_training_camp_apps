@@ -78,6 +78,13 @@ result-*
 バンドメンバー表.json
 reservation/schedule.json
 reservation/config.json
+studio-assignment/band.csv
+
+# Rust build artifacts
+target/
+
+# Migration work files (production DB / dump.json)
+migration_work/
 
 # Production-specific scripts (contains real domain / paths)
 reservation/run-reservation-nohup.sh

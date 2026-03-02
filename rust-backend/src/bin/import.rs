@@ -56,10 +56,19 @@ async fn main() -> Result<()> {
     let pool = if dry_run {
         None
     } else {
-        let url = format!("sqlite:{db_path}?mode=rwc");
+        use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode};
+        use std::str::FromStr;
+
+        let db_file = db_path.trim_start_matches("sqlite:");
+        let opts = SqliteConnectOptions::from_str(&format!("sqlite:{db_file}"))
+            .context("SQLite URL パース失敗")?
+            .create_if_missing(true)
+            .journal_mode(SqliteJournalMode::Wal)
+            .foreign_keys(true);
+
         let pool = sqlx::sqlite::SqlitePoolOptions::new()
             .max_connections(1)
-            .connect(&url)
+            .connect_with(opts)
             .await
             .context("SQLite 接続失敗")?;
 
@@ -74,7 +83,28 @@ async fn main() -> Result<()> {
     let mut stats: HashMap<String, usize> = HashMap::new();
     let mut errors: Vec<String> = Vec::new();
 
-    for entry in &dump.entries {
+    // 依存関係のため処理順を制御:
+    //   members → config → sessions → feedback → line_pending → bands → reservations → その他
+    fn import_priority(table: &str) -> u8 {
+        match table {
+            "members" => 0,
+            "config" => 1,
+            "sessions" => 2,
+            "feedback" => 3,
+            "line_pending" => 4,
+            "bands" => 5,      // band_members が members に外部キー依存
+            "reservations" => 6,
+            _ => 9,
+        }
+    }
+
+    let mut sorted_entries: Vec<&DumpEntry> = dump.entries.iter().collect();
+    sorted_entries.sort_by_key(|e| {
+        let t = e.key.first().and_then(|v| v.as_str()).unwrap_or("unknown");
+        import_priority(t)
+    });
+
+    for entry in &sorted_entries {
         let table = entry.key.first().and_then(|v| v.as_str()).unwrap_or("unknown");
         *stats.entry(table.to_string()).or_insert(0) += 1;
 
@@ -136,11 +166,9 @@ async fn import_entry(pool: &sqlx::SqlitePool, entry: &DumpEntry) -> Result<()> 
         "sessions" => import_session(pool, value).await,
         "feedback" => import_feedback(pool, value).await,
         "config" => import_config(pool, &key, value).await,
+        "line_pending" => import_line_pending(pool, &key, value).await,
         "notified" | "selections" => Ok(()), // 揮発性データはスキップ
-        _ => {
-            // 未知のキーはスキップ
-            Ok(())
-        }
+        _ => import_kv_misc(pool, &entry.key, value).await, // 汎用テーブルに退避
     }
 }
 
@@ -336,6 +364,36 @@ async fn import_config(pool: &sqlx::SqlitePool, key: &[String], value: &Value) -
         }
         _ => {}
     }
+    Ok(())
+}
+
+async fn import_line_pending(pool: &sqlx::SqlitePool, key: &[String], value: &Value) -> Result<()> {
+    // key: ["line_pending", lineUserId]
+    let line_user_id = key.get(1).cloned().unwrap_or_default();
+    if line_user_id.is_empty() {
+        return Ok(());
+    }
+    let display_name = opt_str_field(value, "displayName").unwrap_or_default();
+    let received_at = opt_str_field(value, "receivedAt").unwrap_or_else(|| now_iso());
+
+    sqlx::query!(
+        "INSERT OR REPLACE INTO line_pending (line_user_id, display_name, received_at) VALUES (?, ?, ?)",
+        line_user_id, display_name, received_at
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+async fn import_kv_misc(pool: &sqlx::SqlitePool, key: &[Value], value: &Value) -> Result<()> {
+    let key_json = serde_json::to_string(key)?;
+    let value_json = serde_json::to_string(value)?;
+    sqlx::query!(
+        "INSERT OR REPLACE INTO kv_misc (key_json, value_json) VALUES (?, ?)",
+        key_json, value_json
+    )
+    .execute(pool)
+    .await?;
     Ok(())
 }
 

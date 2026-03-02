@@ -1,16 +1,24 @@
 use anyhow::{anyhow, Context, Result};
 use chrono::{Duration, Utc};
-use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
+use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions};
+use sqlx::SqlitePool;
 use std::collections::HashMap;
+use std::str::FromStr;
 use uuid::Uuid;
 
 use crate::types::*;
 
 pub async fn create_pool(db_path: &str) -> Result<SqlitePool> {
-    let url = format!("sqlite:{db_path}?mode=rwc");
+    let db_file = db_path.trim_start_matches("sqlite:");
+    let opts = SqliteConnectOptions::from_str(&format!("sqlite:{db_file}"))
+        .with_context(|| format!("SQLite URL パース失敗: {db_file}"))?
+        .create_if_missing(true)
+        .journal_mode(SqliteJournalMode::Wal)
+        .foreign_keys(true);
+
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
-        .connect(&url)
+        .connect_with(opts)
         .await
         .with_context(|| format!("Failed to open SQLite database: {db_path}"))?;
 

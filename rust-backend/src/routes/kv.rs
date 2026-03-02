@@ -40,35 +40,36 @@ pub struct AtomicBody {
     pub new_value: Value,
 }
 
-/// GET /api/kv/list/{prefix} - プレフィックスリスト
-pub async fn list_kv(
+/// GET /api/kv/{path} - リスト or 単一キー取得
+/// パスが "list/" で始まる場合はプレフィックスリスト、それ以外は単一キー取得
+pub async fn get_or_list_kv(
     State(pool): State<SqlitePool>,
-    Path(prefix_path): Path<String>,
-) -> Result<Json<ApiResponse<Vec<HashMap<String, Value>>>>, (StatusCode, Json<ApiResponse<()>>)> {
-    let prefix = parse_key_path(&prefix_path);
-    let result = dispatch_list(&pool, &prefix).await;
-    match result {
-        Ok(entries) => Ok(Json(ApiResponse::ok(entries))),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::err(e.to_string())),
-        )),
-    }
-}
+    Path(path): Path<String>,
+) -> axum::response::Response {
+    use axum::response::IntoResponse;
 
-/// GET /api/kv/{key_path} - 単一キー取得
-pub async fn get_kv(
-    State(pool): State<SqlitePool>,
-    Path(key_path): Path<String>,
-) -> Result<Json<ApiResponse<Value>>, (StatusCode, Json<ApiResponse<()>>)> {
-    let key = parse_key_path(&key_path);
-    let result = dispatch_get(&pool, &key).await;
-    match result {
-        Ok(value) => Ok(Json(ApiResponse::ok(value))),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse::err(e.to_string())),
-        )),
+    if let Some(prefix_path) = path.strip_prefix("list/") {
+        // GET /api/kv/list/{prefix...}
+        let prefix = parse_key_path(prefix_path);
+        match dispatch_list(&pool, &prefix).await {
+            Ok(entries) => Json(ApiResponse::ok(entries)).into_response(),
+            Err(e) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse::err(e.to_string())),
+            )
+                .into_response(),
+        }
+    } else {
+        // GET /api/kv/{key...}
+        let key = parse_key_path(&path);
+        match dispatch_get(&pool, &key).await {
+            Ok(value) => Json(ApiResponse::ok(value)).into_response(),
+            Err(e) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse::err(e.to_string())),
+            )
+                .into_response(),
+        }
     }
 }
 
@@ -105,23 +106,40 @@ pub async fn delete_kv(
     }
 }
 
-/// PUT /api/kv/atomic - 楽観的ロック更新
-pub async fn atomic_update(
+/// PUT /api/kv/{path} - atomic（path == "atomic"）またはエラー
+/// kv-client.ts は PUT /api/kv/atomic のみ使用する
+pub async fn put_kv(
     State(pool): State<SqlitePool>,
-    Json(body): Json<AtomicBody>,
-) -> Result<Json<ApiResponse<Value>>, (StatusCode, Json<ApiResponse<()>>)> {
-    let result = dispatch_atomic(&pool, &body.key, body.expected_version, body.new_value).await;
-    match result {
-        Ok(value) => Ok(Json(ApiResponse::ok(value))),
-        Err(e) => {
-            let msg = e.to_string();
-            let status = if msg.contains("既に予約されています") || msg.contains("変更されました") {
-                StatusCode::CONFLICT
-            } else {
-                StatusCode::INTERNAL_SERVER_ERROR
-            };
-            Err((status, Json(ApiResponse::err(msg))))
+    Path(path): Path<String>,
+    body: Option<Json<AtomicBody>>,
+) -> axum::response::Response {
+    use axum::response::IntoResponse;
+
+    if path == "atomic" {
+        match body {
+            Some(Json(b)) => {
+                let result = dispatch_atomic(&pool, &b.key, b.expected_version, b.new_value).await;
+                match result {
+                    Ok(value) => Json(ApiResponse::ok(value)).into_response(),
+                    Err(e) => {
+                        let msg = e.to_string();
+                        let status = if msg.contains("既に予約されています") || msg.contains("変更されました") {
+                            StatusCode::CONFLICT
+                        } else {
+                            StatusCode::INTERNAL_SERVER_ERROR
+                        };
+                        (status, Json(ApiResponse::err(msg))).into_response()
+                    }
+                }
+            }
+            None => (
+                StatusCode::BAD_REQUEST,
+                Json(ApiResponse::err("リクエストボディが不正です".to_string())),
+            )
+                .into_response(),
         }
+    } else {
+        (StatusCode::METHOD_NOT_ALLOWED, Json(ApiResponse::err("PUT は /api/kv/atomic のみ対応".to_string()))).into_response()
     }
 }
 
