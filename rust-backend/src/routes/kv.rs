@@ -34,6 +34,7 @@ pub struct PostBody {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AtomicBody {
     pub key: Vec<String>,
     pub expected_version: i64,

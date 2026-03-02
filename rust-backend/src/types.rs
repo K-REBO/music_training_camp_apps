@@ -7,6 +7,7 @@ use ts_rs::TS;
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
+#[serde(rename_all = "camelCase")]
 pub struct Member {
     pub id: String,
     pub name: String,
@@ -24,6 +25,7 @@ pub struct Member {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
+#[serde(rename_all = "camelCase")]
 pub struct Band {
     pub id: String,
     pub name: String,
@@ -73,6 +75,7 @@ impl RoomType {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
+#[serde(rename_all = "camelCase")]
 pub struct TimeSlot {
     pub id: String,
     pub start_time: String,
@@ -87,6 +90,7 @@ pub struct TimeSlot {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
+#[serde(rename_all = "camelCase")]
 pub struct Reservation {
     pub id: String,
     pub user_id: String,
@@ -131,6 +135,7 @@ impl ReservationStatus {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
+#[serde(rename_all = "camelCase")]
 pub struct UserSession {
     pub id: String,
     pub user_id: String,
@@ -146,6 +151,7 @@ pub struct UserSession {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
+#[serde(rename_all = "camelCase")]
 pub struct Feedback {
     pub id: String,
     pub user_id: String,
@@ -261,9 +267,11 @@ impl ApiResponse<()> {
 pub struct RoomsConfig {
     pub names: Vec<String>,
     pub types: Vec<String>,
+    #[serde(default)]
     pub version: i64,
 }
 
+/// data.ts が snake_case で参照するため rename_all は付けない
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScheduleConfig {
     pub start_time: String,
@@ -277,6 +285,7 @@ pub struct ScheduleConfig {
 // ───────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SelectionState {
     pub user_id: String,
     pub user_name: String,
