@@ -1,0 +1,104 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id as \"id!\", user_id as \"user_id!\", user_name as \"user_name!\",\n           band_id as \"band_id!\", band_name as \"band_name!\", room_id as \"room_id!\",\n           room_name as \"room_name!\", time_slot_id as \"time_slot_id!\",\n           date as \"date!\", reserved_at as \"reserved_at!\",\n           version as \"version!\", status as \"status!\",\n           is_personal as \"is_personal!\", event_name, description\n           FROM reservations WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "user_id!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "user_name!",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "band_id!",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "band_name!",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "room_id!",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "room_name!",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "time_slot_id!",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "date!",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "reserved_at!",
+        "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "version!",
+        "ordinal": 10,
+        "type_info": "Integer"
+      },
+      {
+        "name": "status!",
+        "ordinal": 11,
+        "type_info": "Text"
+      },
+      {
+        "name": "is_personal!",
+        "ordinal": 12,
+        "type_info": "Integer"
+      },
+      {
+        "name": "event_name",
+        "ordinal": 13,
+        "type_info": "Text"
+      },
+      {
+        "name": "description",
+        "ordinal": 14,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "379e18630f1713af3651f92dd007b7bd637bad6b193dc7003a4cba2d44b22422"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO line_template (id, template, version) VALUES (1, ?, 1)\n         ON CONFLICT(id) DO UPDATE SET template = excluded.template, version = version + 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "2a6a53b7647ce0df8893419cc67b019aa0f639448a9c5bf30677f3ca322433b2"
+}

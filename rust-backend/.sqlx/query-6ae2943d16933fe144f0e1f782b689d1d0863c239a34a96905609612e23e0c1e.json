@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO rooms_config (id, names_json, types_json, version) VALUES (1, ?, ?, ?)\n         ON CONFLICT(id) DO UPDATE SET names_json = excluded.names_json,\n         types_json = excluded.types_json, version = excluded.version",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "6ae2943d16933fe144f0e1f782b689d1d0863c239a34a96905609612e23e0c1e"
+}
