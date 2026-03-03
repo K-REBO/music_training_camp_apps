@@ -168,6 +168,8 @@
                 # .sqlx ディレクトリ自体とその中身を含める（SQLX_OFFLINE ビルドに必要）
                 # 末尾スラッシュなしでマッチさせることでディレクトリ自体もマッチする
                 (pkgs.lib.hasInfix "/.sqlx" path) ||
+                # migrations/ を含める（sqlx::migrate! マクロがコンパイル時に埋め込むため必要）
+                (pkgs.lib.hasInfix "/migrations" path) ||
                 (craneLib.filterCargoSources path type);
             };
 
