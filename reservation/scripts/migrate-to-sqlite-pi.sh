@@ -9,7 +9,7 @@ set -e
 #   - このスクリプトは Pi 上で直接実行すること
 #
 # 使い方:
-#   cd /home/rpi/projects/music_training_camp_apps
+#   cd /home/rpi/music_training_camp_apps
 #   bash reservation/scripts/migrate-to-sqlite-pi.sh
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

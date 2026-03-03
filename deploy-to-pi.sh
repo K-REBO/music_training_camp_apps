@@ -19,7 +19,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SVELTE_DIR="$SCRIPT_DIR/reservation"
 
 PI_HOST="nixpi"
-PI_APP_ROOT="/home/rpi/projects/music_training_camp_apps"
+PI_APP_ROOT="/home/rpi/music_training_camp_apps"
 
 NO_BUILD=false
 for arg in "$@"; do
