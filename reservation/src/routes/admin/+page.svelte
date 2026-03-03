@@ -1,21 +1,63 @@
 <script>
   import { base } from '$app/paths';
-  import { invalidateAll } from '$app/navigation';
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
   import BandManagement from '$lib/components/admin/BandManagement.svelte';
   import MemberManagement from '$lib/components/admin/MemberManagement.svelte';
   import RoomManagement from '$lib/components/admin/RoomManagement.svelte';
   import StudioAssignment from '$lib/components/admin/StudioAssignment.svelte';
 
-  export let data;
-
   let activeTab = 'bands';
+  let currentUser = null;
+  let bands = [];
+  let members = [];
+  let rooms = [];
+  let loading = true;
 
-  $: bands = data.bands;
-  $: members = data.members;
-  $: rooms = data.rooms;
+  async function loadData() {
+    try {
+      const [bandsRes, membersRes, roomsRes] = await Promise.all([
+        fetch(`${base}/api/bands`),
+        fetch(`${base}/api/members`),
+        fetch(`${base}/api/rooms`)
+      ]);
+      const [bandsData, membersData, roomsData] = await Promise.all([
+        bandsRes.json(),
+        membersRes.json(),
+        roomsRes.json()
+      ]);
+      if (bandsData.success) bands = bandsData.data;
+      if (membersData.success) members = membersData.data;
+      if (roomsData.success) rooms = roomsData.data;
+    } catch (e) {
+      console.error('Data loading error:', e);
+    }
+  }
+
+  onMount(async () => {
+    // 認証 + 管理者チェック
+    try {
+      const meRes = await fetch(`${base}/api/auth/me`);
+      const meData = await meRes.json();
+      if (!meData.success || !meData.data) {
+        goto(`${base}/login`);
+        return;
+      }
+      if (!meData.data.isAdmin) {
+        goto(`${base}/`);
+        return;
+      }
+      currentUser = meData.data;
+    } catch (e) {
+      goto(`${base}/login`);
+      return;
+    }
+    await loadData();
+    loading = false;
+  });
 
   async function handleChange() {
-    await invalidateAll();
+    await loadData();
   }
 
   // LINE通知テンプレート
@@ -65,6 +107,11 @@
   <title>管理者画面 - 合宿予約システム</title>
 </svelte:head>
 
+{#if loading}
+  <div class="min-h-screen flex items-center justify-center">
+    <p class="text-gray-500">読み込み中...</p>
+  </div>
+{:else}
 <div class="min-h-screen bg-gray-50">
   <!-- ヘッダー -->
   <header class="bg-white border-b border-gray-200 shadow-sm">
@@ -79,7 +126,7 @@
         <h1 class="text-lg font-bold text-gray-900">管理者画面</h1>
       </div>
       <div class="flex items-center space-x-3">
-        <span class="text-sm text-gray-500">{data.user.name}</span>
+        <span class="text-sm text-gray-500">{currentUser?.name ?? ''}</span>
         <button
           on:click={handleLogout}
           class="text-sm text-gray-500 hover:text-gray-700 underline"
@@ -193,3 +240,4 @@
     </div>
   </main>
 </div>
+{/if}
