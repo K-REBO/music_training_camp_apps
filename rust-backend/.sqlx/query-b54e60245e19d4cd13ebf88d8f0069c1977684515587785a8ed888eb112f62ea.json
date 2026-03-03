@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT member_id as \"member_id!\" FROM band_members WHERE band_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "member_id!",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b54e60245e19d4cd13ebf88d8f0069c1977684515587785a8ed888eb112f62ea"
+}

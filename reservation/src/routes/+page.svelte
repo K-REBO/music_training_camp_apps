@@ -1,14 +1,12 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
   import { base } from '$app/paths';
   import ReservationGrid from '$lib/components/ReservationGrid.svelte';
   import BandSelector from '$lib/components/BandSelector.svelte';
   import FeedbackForm from '$lib/components/FeedbackForm.svelte';
   import { wsManager, wsStatus, selectionStates } from '$lib/stores/websocket.js';
-  
-  export let data; // ページデータ
-  
+
   let rooms = [];
   let timeSlots = [];
   let bands = [];
@@ -19,14 +17,29 @@
   let loading = true;
   let error = '';
   let showFeedbackForm = false;
-  
-  const currentUser = data?.user || null;
-  const isAdmin = data?.isAdmin || false;
+
+  let currentUser = null;
+  let isAdmin = false;
   
   // WebSocket connection status
   let connectionStatus = 'disconnected';
   
   onMount(async () => {
+    // 認証チェック
+    try {
+      const meRes = await fetch(`${base}/api/auth/me`);
+      const meData = await meRes.json();
+      if (!meData.success || !meData.data) {
+        goto(`${base}/login`);
+        return;
+      }
+      currentUser = meData.data;
+      isAdmin = meData.data.isAdmin || false;
+    } catch (e) {
+      goto(`${base}/login`);
+      return;
+    }
+
     await loadData();
     setupWebSocket();
     setupReservationEventListeners();

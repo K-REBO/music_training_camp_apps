@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT user_id as \"user_id!\", user_name as \"user_name!\",\n           band_id as \"band_id!\", band_name as \"band_name!\",\n           timestamp as \"timestamp!\", expires_at as \"expires_at!\"\n           FROM selections WHERE date = ? AND time_slot_id = ? AND room_id = ? AND expires_at > ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_id!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "user_name!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "band_id!",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "band_name!",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "timestamp!",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "expires_at!",
+        "ordinal": 5,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "4f68d2a270eecf44ef518d347977b3a64708a022b6bd03df5d5d931253a939de"
+}

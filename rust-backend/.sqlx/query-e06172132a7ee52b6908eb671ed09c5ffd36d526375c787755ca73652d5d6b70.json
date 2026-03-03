@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR REPLACE INTO kv_misc (key_json, value_json) VALUES (?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "e06172132a7ee52b6908eb671ed09c5ffd36d526375c787755ca73652d5d6b70"
+}

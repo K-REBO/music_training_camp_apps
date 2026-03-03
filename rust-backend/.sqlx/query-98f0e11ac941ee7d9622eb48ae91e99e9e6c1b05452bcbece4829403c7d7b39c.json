@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR REPLACE INTO reservations (id, user_id, user_name, band_id, band_name, room_id, room_name, time_slot_id, date, reserved_at, version, status, is_personal, event_name, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 15
+    },
+    "nullable": []
+  },
+  "hash": "98f0e11ac941ee7d9622eb48ae91e99e9e6c1b05452bcbece4829403c7d7b39c"
+}

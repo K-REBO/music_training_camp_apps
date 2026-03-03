@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT OR REPLACE INTO line_pending (line_user_id, display_name, received_at) VALUES (?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "b6b70e78af2d39f380b56be38a3da3d59f8532f5e14ebd0dc373d66bd6058c90"
+}

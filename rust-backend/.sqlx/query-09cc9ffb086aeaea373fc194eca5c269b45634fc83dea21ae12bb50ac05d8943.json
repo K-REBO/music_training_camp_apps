@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO notified (date, room_id, slot_id, notified_at, expires_at) VALUES (?, ?, ?, ?, ?)\n         ON CONFLICT(date, room_id, slot_id) DO UPDATE SET notified_at = excluded.notified_at, expires_at = excluded.expires_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "09cc9ffb086aeaea373fc194eca5c269b45634fc83dea21ae12bb50ac05d8943"
+}

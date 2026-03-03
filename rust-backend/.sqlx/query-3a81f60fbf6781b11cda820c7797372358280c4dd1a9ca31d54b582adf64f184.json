@@ -1,0 +1,80 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT id as \"id!\", user_id as \"user_id!\", user_name as \"user_name!\",\n           type as \"feedback_type!\", title as \"title!\", description as \"description!\",\n           priority as \"priority!\", status as \"status!\",\n           created_at as \"created_at!\", updated_at, version as \"version!\"\n           FROM feedback ORDER BY created_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "user_id!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "user_name!",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "feedback_type!",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "title!",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "description!",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "priority!",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "status!",
+        "ordinal": 7,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at!",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "version!",
+        "ordinal": 10,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "3a81f60fbf6781b11cda820c7797372358280c4dd1a9ca31d54b582adf64f184"
+}

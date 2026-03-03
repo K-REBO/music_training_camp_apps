@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM line_pending WHERE line_user_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "17ab1c0483d223c93f7a8e7cacd822efa27cf8a91181d74504aeaf0035a9f94b"
+}

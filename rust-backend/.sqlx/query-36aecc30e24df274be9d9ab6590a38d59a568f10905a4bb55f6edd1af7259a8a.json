@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE feedback SET status = ?, updated_at = ?, version = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "36aecc30e24df274be9d9ab6590a38d59a568f10905a4bb55f6edd1af7259a8a"
+}

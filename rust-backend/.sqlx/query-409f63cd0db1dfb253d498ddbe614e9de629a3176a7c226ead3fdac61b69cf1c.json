@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO selections (date, time_slot_id, room_id, user_id, user_name, band_id, band_name, timestamp, expires_at)\n         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)\n         ON CONFLICT(date, time_slot_id, room_id) DO UPDATE SET\n           user_id = excluded.user_id, user_name = excluded.user_name,\n           band_id = excluded.band_id, band_name = excluded.band_name,\n           timestamp = excluded.timestamp, expires_at = excluded.expires_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "409f63cd0db1dfb253d498ddbe614e9de629a3176a7c226ead3fdac61b69cf1c"
+}

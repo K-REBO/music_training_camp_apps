@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT line_user_id as \"line_user_id!\", display_name as \"display_name!\",\n           received_at as \"received_at!\" FROM line_pending ORDER BY received_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "name": "line_user_id!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "display_name!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "received_at!",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "201f4207063eb304b1bcb55b206a66119399513f8f568a015f17712bb0e79700"
+}

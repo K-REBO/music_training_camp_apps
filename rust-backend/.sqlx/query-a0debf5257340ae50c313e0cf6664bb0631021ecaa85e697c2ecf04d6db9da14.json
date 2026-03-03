@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM selections WHERE date = ? AND time_slot_id = ? AND room_id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "a0debf5257340ae50c313e0cf6664bb0631021ecaa85e697c2ecf04d6db9da14"
+}

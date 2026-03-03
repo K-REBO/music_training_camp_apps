@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO line_pending (line_user_id, display_name, received_at) VALUES (?, ?, ?)\n         ON CONFLICT(line_user_id) DO UPDATE SET display_name = excluded.display_name,\n         received_at = excluded.received_at",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "2b7b90cf8bfdc65d01cd5b28e10228a1c9b2965b268cc031d4f10bd50e5481ad"
+}

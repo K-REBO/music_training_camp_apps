@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO bands (id, name, members_json, created_at, version) VALUES (?, ?, ?, ?, 0)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "32064de99a891e378e3f24b73e3f3391ca0aa386755c0c2bce2024bc5579e4ed"
+}

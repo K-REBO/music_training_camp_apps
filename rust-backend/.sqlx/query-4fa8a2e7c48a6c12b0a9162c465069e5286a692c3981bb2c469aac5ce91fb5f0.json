@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO schedule_config (id, start_time, end_time, slot_duration_minutes, version) VALUES (1, ?, ?, ?, ?)\n                 ON CONFLICT(id) DO UPDATE SET start_time = excluded.start_time, end_time = excluded.end_time, slot_duration_minutes = excluded.slot_duration_minutes, version = excluded.version",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "4fa8a2e7c48a6c12b0a9162c465069e5286a692c3981bb2c469aac5ce91fb5f0"
+}

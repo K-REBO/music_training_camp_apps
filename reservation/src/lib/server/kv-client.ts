@@ -1,9 +1,11 @@
 /**
  * KV Client for SvelteKit
- * HTTP経由でDeno KVサーバーと通信
+ * HTTP経由でKVサーバー（Deno または Rust）と通信
+ * KV_SERVER_URL 環境変数で切り替え可能
  */
 
-const KV_SERVER_URL = 'http://127.0.0.1:8001';;
+// 環境変数 KV_SERVER_URL が設定されている場合はそちらを優先（Rust への移行時に使用）
+const KV_SERVER_URL = (typeof process !== 'undefined' && process.env?.KV_SERVER_URL) || 'http://127.0.0.1:8001';
 
 export class KVClient {
   private baseUrl: string;

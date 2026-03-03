@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE reservations SET status = ?, version = ? WHERE date = ? AND room_id = ? AND time_slot_id = ? AND version = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "9366984f36366ad0aac1695d4b29420bdc301657465fdbc36e970c30141a8887"
+}

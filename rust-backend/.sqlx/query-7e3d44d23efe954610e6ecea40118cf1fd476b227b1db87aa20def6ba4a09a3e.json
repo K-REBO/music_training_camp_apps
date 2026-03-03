@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE rooms_config SET names_json = ?, types_json = ?, version = ? WHERE id = 1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "7e3d44d23efe954610e6ecea40118cf1fd476b227b1db87aa20def6ba4a09a3e"
+}
