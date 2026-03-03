@@ -1,4 +1,5 @@
 mod db;
+mod extractors;
 mod routes;
 mod scheduler;
 mod types;
@@ -8,11 +9,13 @@ use anyhow::Result;
 use axum::{
     http::{HeaderValue, Method},
     response::Json,
-    routing::{get, put},
+    routing::get,
     Router,
 };
 use std::env;
+use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -45,13 +48,16 @@ async fn main() -> Result<()> {
 
     let line_token = env::var("LINE_CHANNEL_ACCESS_TOKEN").unwrap_or_default();
 
+    let static_dir = env::var("STATIC_DIR").unwrap_or_else(|_| "./static".to_string());
+
     // SvelteKit の開発サーバーからのリクエストを許可（CORS）
     let allowed_origins = env::var("ALLOWED_ORIGINS")
         .unwrap_or_else(|_| "http://localhost:3000,http://localhost:5173".to_string());
 
-    info!("🚀 Rust KV Server starting...");
+    info!("🚀 Rust Backend starting...");
     info!("   Database: {}", db_path);
     info!("   Port: {}", port);
+    info!("   Static dir: {}", static_dir);
     info!(
         "   LINE notifications: {}",
         if line_token.is_empty() { "disabled" } else { "enabled" }
@@ -73,19 +79,31 @@ async fn main() -> Result<()> {
     // CORS
     let cors = build_cors(&allowed_origins);
 
-    // ルーター
+    // WebSocket + KV 互換ルート（既存）
     let kv_state = pool.clone();
-    let ws_combined_state = (pool.clone(), ws_state);
+    let ws_combined_state = (pool.clone(), ws_state.clone());
 
-    let app = Router::new()
-        // WebSocket
-        .route("/ws", get(ws_handler).with_state(ws_combined_state))
-        // KV 互換 API（単一 catch-all でパス内分岐）
-        //   GET  /api/kv/list/{prefix...} → リスト取得
-        //   GET  /api/kv/{key...}         → 単一キー取得
-        //   POST /api/kv/{key...}         → セット
-        //   PUT  /api/kv/atomic           → 楽観的ロック更新（path == "atomic"）
-        //   DELETE /api/kv/{key...}       → 削除
+    // 静的ファイル配信（SvelteKit static build）
+    // /reservation/* にネストするため、2つ作成する
+    let serve_static_reservation = ServeDir::new(&static_dir)
+        .fallback(ServeFile::new(format!("{}/200.html", static_dir)));
+    let serve_static_root = ServeDir::new(&static_dir)
+        .fallback(ServeFile::new(format!("{}/200.html", static_dir)));
+
+    // /reservation 配下の REST API + 静的ファイル ルーター
+    // NOTE: /reservation/* はこのルーターが処理するため、fallback_service で静的ファイルを配信する
+    let reservation_router = Router::new()
+        // 新規 REST API
+        .merge(routes::auth::router())
+        .merge(routes::bands::router())
+        .merge(routes::members::router())
+        .merge(routes::rooms::router())
+        .merge(routes::reservations::router())
+        .merge(routes::config::router())
+        .merge(routes::feedback::router())
+        .merge(routes::admin::router())
+        .merge(routes::line::router())
+        // KV 互換 API（Phase 3 との互換性維持）
         .route(
             "/api/kv/*path",
             get(get_or_list_kv)
@@ -94,13 +112,26 @@ async fn main() -> Result<()> {
                 .delete(delete_kv)
                 .with_state(kv_state.clone()),
         )
+        // /reservation/_app/*, /reservation/login 等の静的ファイルを配信
+        .fallback_service(serve_static_reservation)
+        .layer(axum::Extension(ws_state.clone()))
+        .with_state(pool.clone());
+
+    let app = Router::new()
+        // WebSocket
+        .route("/ws", get(ws_handler).with_state(ws_combined_state))
+        // /reservation/* は REST API + 静的ファイル ルーター
+        .nest("/reservation", reservation_router)
         // ヘルスチェック
         .route("/health", get(health_check))
-        .layer(cors);
+        // / 等、/reservation 以外へのフォールバック
+        .fallback_service(serve_static_root)
+        .layer(ServiceBuilder::new().layer(cors));
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
     info!("🎵 Listening on http://0.0.0.0:{}", port);
     info!("   WebSocket: ws://0.0.0.0:{}/ws", port);
+    info!("   REST API: http://0.0.0.0:{}/reservation/api/...", port);
 
     axum::serve(listener, app).await?;
     Ok(())
@@ -120,18 +151,17 @@ fn build_cors(allowed_origins_str: &str) -> CorsLayer {
         .filter_map(|s| s.trim().parse().ok())
         .collect();
 
+    // Phase 4: 静的ファイルも同一オリジン配信のため、シンプルに Any を使用
+    // allow_credentials(true) と allow_headers(Any) は同時使用不可のため使わない
     if origins.is_empty() {
         CorsLayer::new()
             .allow_origin(Any)
             .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
             .allow_headers(Any)
     } else {
-        let mut layer = CorsLayer::new()
+        CorsLayer::new()
+            .allow_origin(origins)
             .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
-            .allow_headers(Any);
-        for origin in origins {
-            layer = layer.allow_origin(origin);
-        }
-        layer
+            .allow_headers(Any)
     }
 }

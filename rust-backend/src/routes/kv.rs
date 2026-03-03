@@ -396,7 +396,7 @@ async fn dispatch_atomic(
                 Some(new_m.name),
                 Some(new_m.grade),
                 Some(new_m.line_user_id),
-                expected_version,
+                Some(expected_version),
             )
             .await?;
             Ok(serde_json::to_value(updated)?)
@@ -410,7 +410,7 @@ async fn dispatch_atomic(
                 Some(new_b.name),
                 Some(new_b.members),
                 Some(new_b.member_ids),
-                expected_version,
+                Some(expected_version),
             )
             .await?;
             Ok(serde_json::to_value(updated)?)

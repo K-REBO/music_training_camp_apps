@@ -107,16 +107,18 @@ pub async fn update_member(
     name: Option<String>,
     grade: Option<String>,
     line_user_id: Option<Option<String>>,
-    expected_version: i64,
+    expected_version: Option<i64>,
 ) -> Result<Member> {
     let current = get_member(pool, id)
         .await?
         .ok_or_else(|| anyhow!("メンバーが見つかりません"))?;
 
-    if current.version != expected_version {
-        return Err(anyhow!(
-            "データが他のユーザーによって変更されました。ページを再読み込みしてください"
-        ));
+    if let Some(ver) = expected_version {
+        if current.version != ver {
+            return Err(anyhow!(
+                "データが他のユーザーによって変更されました。ページを再読み込みしてください"
+            ));
+        }
     }
 
     let new_name = name.unwrap_or(current.name);
@@ -260,16 +262,18 @@ pub async fn update_band(
     name: Option<String>,
     members: Option<HashMap<String, String>>,
     member_ids: Option<Vec<String>>,
-    expected_version: i64,
+    expected_version: Option<i64>,
 ) -> Result<Band> {
     let current = get_band(pool, id)
         .await?
         .ok_or_else(|| anyhow!("バンドが見つかりません"))?;
 
-    if current.version != expected_version {
-        return Err(anyhow!(
-            "データが他のユーザーによって変更されました。ページを再読み込みしてください"
-        ));
+    if let Some(ver) = expected_version {
+        if current.version != ver {
+            return Err(anyhow!(
+                "データが他のユーザーによって変更されました。ページを再読み込みしてください"
+            ));
+        }
     }
 
     let new_name = name.unwrap_or(current.name);
@@ -990,4 +994,236 @@ fn feedback_status_str(s: &FeedbackStatus) -> &'static str {
         FeedbackStatus::Resolved => "resolved",
         FeedbackStatus::Closed => "closed",
     }
+}
+
+// ───────────────────────────────────────────────
+// 追加ヘルパー（Phase 4 REST API 用）
+// ───────────────────────────────────────────────
+
+pub async fn get_band_by_name(pool: &SqlitePool, name: &str) -> Result<Option<Band>> {
+    let row = sqlx::query!(
+        r#"SELECT id as "id!", name as "name!", members_json as "members_json!",
+           created_at as "created_at!", version as "version!"
+           FROM bands WHERE name = ?"#,
+        name
+    )
+    .fetch_optional(pool)
+    .await?;
+
+    match row {
+        None => Ok(None),
+        Some(r) => {
+            let member_ids = get_band_member_ids(pool, &r.id).await?;
+            let members: HashMap<String, String> =
+                serde_json::from_str(&r.members_json).unwrap_or_default();
+            Ok(Some(Band {
+                id: r.id,
+                name: r.name,
+                members,
+                member_ids,
+                created_at: r.created_at,
+                version: r.version,
+            }))
+        }
+    }
+}
+
+pub async fn get_member_by_name_and_grade(
+    pool: &SqlitePool,
+    name: &str,
+    grade: &str,
+) -> Result<Option<Member>> {
+    let row = sqlx::query!(
+        r#"SELECT id as "id!", name as "name!", grade as "grade!",
+           line_user_id, created_at as "created_at!", version as "version!"
+           FROM members WHERE name = ? AND grade = ?"#,
+        name, grade
+    )
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|r| Member {
+        id: r.id,
+        name: r.name,
+        grade: r.grade,
+        line_user_id: r.line_user_id,
+        created_at: r.created_at,
+        version: r.version,
+    }))
+}
+
+pub async fn clear_all_reservations(pool: &SqlitePool) -> Result<u64> {
+    let result = sqlx::query!("DELETE FROM reservations")
+        .execute(pool)
+        .await?;
+    Ok(result.rows_affected())
+}
+
+pub async fn save_line_template(pool: &SqlitePool, template: &str) -> Result<String> {
+    sqlx::query!(
+        "INSERT INTO line_template (id, template, version) VALUES (1, ?, 1)
+         ON CONFLICT(id) DO UPDATE SET template = excluded.template, version = version + 1",
+        template
+    )
+    .execute(pool)
+    .await?;
+    Ok(template.to_string())
+}
+
+pub async fn add_studio_room(pool: &SqlitePool, name: &str) -> Result<Vec<Room>> {
+    let mut config = get_rooms_config(pool).await?;
+    config.names.push(name.to_string());
+    config.types.push("studio".to_string());
+    let names_json = serde_json::to_string(&config.names)?;
+    let types_json = serde_json::to_string(&config.types)?;
+    let new_version = config.version + 1;
+    sqlx::query!(
+        "INSERT INTO rooms_config (id, names_json, types_json, version) VALUES (1, ?, ?, ?)
+         ON CONFLICT(id) DO UPDATE SET names_json = excluded.names_json,
+         types_json = excluded.types_json, version = excluded.version",
+        names_json, types_json, new_version
+    )
+    .execute(pool)
+    .await?;
+    let updated = get_rooms_config(pool).await?;
+    Ok(build_rooms(&updated))
+}
+
+pub async fn update_room_name(pool: &SqlitePool, room_id: &str, name: &str) -> Result<Vec<Room>> {
+    // room_id は "room-N" 形式（1-indexed）
+    let idx: usize = room_id
+        .strip_prefix("room-")
+        .and_then(|s| s.parse::<usize>().ok())
+        .ok_or_else(|| anyhow!("無効な部屋IDです: {}", room_id))?
+        .saturating_sub(1);
+
+    let mut config = get_rooms_config(pool).await?;
+    if idx >= config.names.len() {
+        return Err(anyhow!("部屋が見つかりません: {}", room_id));
+    }
+    config.names[idx] = name.to_string();
+    let names_json = serde_json::to_string(&config.names)?;
+    let new_version = config.version + 1;
+    sqlx::query!(
+        "UPDATE rooms_config SET names_json = ?, version = ? WHERE id = 1",
+        names_json, new_version
+    )
+    .execute(pool)
+    .await?;
+    let updated = get_rooms_config(pool).await?;
+    Ok(build_rooms(&updated))
+}
+
+pub async fn delete_last_studio_room(pool: &SqlitePool) -> Result<Vec<Room>> {
+    let mut config = get_rooms_config(pool).await?;
+    // 最後のスタジオを削除（イベント以外の最後のエントリ）
+    let last_studio_pos = config
+        .types
+        .iter()
+        .enumerate()
+        .rev()
+        .find(|(_, t)| t.as_str() == "studio")
+        .map(|(i, _)| i)
+        .ok_or_else(|| anyhow!("削除できるスタジオがありません"))?;
+
+    config.names.remove(last_studio_pos);
+    config.types.remove(last_studio_pos);
+    let names_json = serde_json::to_string(&config.names)?;
+    let types_json = serde_json::to_string(&config.types)?;
+    let new_version = config.version + 1;
+    sqlx::query!(
+        "UPDATE rooms_config SET names_json = ?, types_json = ?, version = ? WHERE id = 1",
+        names_json, types_json, new_version
+    )
+    .execute(pool)
+    .await?;
+    let updated = get_rooms_config(pool).await?;
+    Ok(build_rooms(&updated))
+}
+
+// ───────────────────────────────────────────────
+// LINE 登録待ち（line_pending テーブル）
+// ───────────────────────────────────────────────
+
+pub async fn get_line_pending_all(pool: &SqlitePool) -> Result<Vec<LinePending>> {
+    let rows = sqlx::query!(
+        r#"SELECT line_user_id as "line_user_id!", display_name as "display_name!",
+           received_at as "received_at!" FROM line_pending ORDER BY received_at DESC"#
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|r| LinePending {
+            line_user_id: r.line_user_id,
+            display_name: r.display_name,
+            received_at: r.received_at,
+        })
+        .collect())
+}
+
+pub async fn set_line_pending(
+    pool: &SqlitePool,
+    line_user_id: &str,
+    display_name: &str,
+) -> Result<()> {
+    let received_at = Utc::now().to_rfc3339();
+    sqlx::query!(
+        "INSERT INTO line_pending (line_user_id, display_name, received_at) VALUES (?, ?, ?)
+         ON CONFLICT(line_user_id) DO UPDATE SET display_name = excluded.display_name,
+         received_at = excluded.received_at",
+        line_user_id, display_name, received_at
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+pub async fn delete_line_pending(pool: &SqlitePool, line_user_id: &str) -> Result<()> {
+    sqlx::query!("DELETE FROM line_pending WHERE line_user_id = ?", line_user_id)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+// ───────────────────────────────────────────────
+// 予約を ID で取得
+// ───────────────────────────────────────────────
+
+pub async fn get_reservation_by_id(pool: &SqlitePool, id: &str) -> Result<Option<Reservation>> {
+    let row = sqlx::query!(
+        r#"SELECT id as "id!", user_id as "user_id!", user_name as "user_name!",
+           band_id as "band_id!", band_name as "band_name!", room_id as "room_id!",
+           room_name as "room_name!", time_slot_id as "time_slot_id!",
+           date as "date!", reserved_at as "reserved_at!",
+           version as "version!", status as "status!",
+           is_personal as "is_personal!", event_name, description
+           FROM reservations WHERE id = ?"#,
+        id
+    )
+    .fetch_optional(pool)
+    .await?;
+
+    Ok(row.map(|r| Reservation {
+        id: r.id,
+        user_id: r.user_id,
+        user_name: r.user_name,
+        band_id: r.band_id,
+        band_name: r.band_name,
+        room_id: r.room_id,
+        room_name: r.room_name,
+        time_slot_id: r.time_slot_id,
+        date: r.date,
+        reserved_at: r.reserved_at,
+        version: r.version,
+        status: if r.status == "active" {
+            ReservationStatus::Active
+        } else {
+            ReservationStatus::Cancelled
+        },
+        is_personal: r.is_personal != 0,
+        event_name: r.event_name,
+        description: r.description,
+    }))
 }

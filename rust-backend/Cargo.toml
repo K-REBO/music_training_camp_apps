@@ -17,7 +17,16 @@ path = "src/bin/import.rs"
 axum = { version = "0.7", features = ["ws", "macros"] }
 axum-extra = { version = "0.9", features = ["cookie"] }
 tower = "0.5"
-tower-http = { version = "0.6", features = ["cors", "trace"] }
+tower-http = { version = "0.6", features = ["cors", "trace", "fs"] }
+
+# LINE webhook 署名検証
+hmac = "0.12"
+sha2 = "0.10"
+hex = "0.4"
+base64 = "0.22"
+
+# Cookie の max_age で使用
+time = { version = "0.3", features = ["std"] }
 
 # Async runtime
 tokio = { version = "1", features = ["full"] }

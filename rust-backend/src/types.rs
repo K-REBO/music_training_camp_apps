@@ -199,6 +199,18 @@ pub enum FeedbackStatus {
 }
 
 // ───────────────────────────────────────────────
+// LINE 登録待ち
+// ───────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LinePending {
+    pub line_user_id: String,
+    pub display_name: String,
+    pub received_at: String,
+}
+
+// ───────────────────────────────────────────────
 // WebSocket メッセージ
 // ───────────────────────────────────────────────
 
