@@ -86,6 +86,13 @@ target/
 # Migration work files (production DB / dump.json)
 migration_work/
 
+# Docker data volume（本番DBを含む）
+data/
+
+# Cloudflare Tunnel credentials（シークレット）
+cloudflared/tunnel.json
+cloudflared/*.json
+
 # Production-specific scripts (contains real domain / paths)
 # Note: run-reservation-nohup.sh は Phase 4 で環境変数ベースに更新済みのため除外解除
 reservation/scripts/seed.ts

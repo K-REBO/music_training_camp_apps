@@ -1,0 +1,34 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./data:/data
+    environment:
+      PORT: "8001"
+      DATABASE_URL: "sqlite:/data/reservation.db"
+      STATIC_DIR: "/app/static"
+      ALLOWED_ORIGINS: "http://localhost:8001"
+      LINE_CHANNEL_ACCESS_TOKEN: "${LINE_CHANNEL_ACCESS_TOKEN:-}"
+      LINE_CHANNEL_SECRET: "${LINE_CHANNEL_SECRET:-}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin123}"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    volumes:
+      - ./cloudflared:/etc/cloudflared:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      TUNNEL_TOKEN: "${CLOUDFLARE_TUNNEL_TOKEN:-}"

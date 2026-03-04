@@ -5,8 +5,6 @@
   import BandManagement from '$lib/components/admin/BandManagement.svelte';
   import MemberManagement from '$lib/components/admin/MemberManagement.svelte';
   import RoomManagement from '$lib/components/admin/RoomManagement.svelte';
-  import StudioAssignment from '$lib/components/admin/StudioAssignment.svelte';
-
   let activeTab = 'bands';
   let currentUser = null;
   let bands = [];
@@ -166,14 +164,6 @@
         部屋管理
       </button>
       <button
-        on:click={() => activeTab = 'studio-assignment'}
-        class="px-5 py-2 text-sm font-medium rounded-md transition-colors {activeTab === 'studio-assignment'
-          ? 'bg-white text-gray-900 shadow-sm'
-          : 'text-gray-600 hover:text-gray-900'}"
-      >
-        スタジオ割り当て
-      </button>
-      <button
         on:click={() => activeTab = 'settings'}
         class="px-5 py-2 text-sm font-medium rounded-md transition-colors {activeTab === 'settings'
           ? 'bg-white text-gray-900 shadow-sm'
@@ -191,8 +181,6 @@
         <MemberManagement {members} on:change={handleChange} />
       {:else if activeTab === 'rooms'}
         <RoomManagement {rooms} on:change={handleChange} />
-      {:else if activeTab === 'studio-assignment'}
-        <StudioAssignment {bands} {rooms} />
       {:else}
         <!-- 設定タブ -->
         <div class="space-y-6 max-w-xl">

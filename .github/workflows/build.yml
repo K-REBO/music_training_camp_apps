@@ -1,0 +1,96 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ARM64 ビルドのために QEMU をセットアップ
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      # マルチプラットフォームビルド用 buildx をセットアップ
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # GHCR へのログイン（PR 以外の場合のみ）
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # イメージのメタデータ（タグ・ラベル）を生成
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # sqlx オフラインキャッシュの存在確認
+      - name: Check sqlx offline cache
+        run: |
+          if [ ! -d "rust-backend/.sqlx" ]; then
+            echo "⚠️  rust-backend/.sqlx が見つかりません。SQLX_OFFLINE=true でのビルドが失敗する可能性があります。"
+            echo "ローカルで 'cd rust-backend && cargo sqlx prepare' を実行してキャッシュを生成してください。"
+            exit 1
+          fi
+
+      # Docker イメージをビルドしてプッシュ（linux/arm64 のみ）
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # GitHub Actions キャッシュを活用してビルド高速化
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            SQLX_OFFLINE=true
+
+  # ビルド成功後にデプロイ通知（オプション）
+  notify:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Deployment summary
+        run: |
+          echo "## Docker Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Image: \`ghcr.io/${{ github.repository }}:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Raspberry Pi でのデプロイ手順" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "docker compose -f docker-compose.prod.yml pull" >> $GITHUB_STEP_SUMMARY
+          echo "docker compose -f docker-compose.prod.yml up -d" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

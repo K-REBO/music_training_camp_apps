@@ -1,0 +1,44 @@
+services:
+  app:
+    image: ghcr.io/k-rebo/music_training_camp_apps:latest
+    ports:
+      - "8001:8001"
+    volumes:
+      - /data/music-camp:/data
+    environment:
+      PORT: "8001"
+      DATABASE_URL: "sqlite:/data/reservation.db"
+      STATIC_DIR: "/app/static"
+      ALLOWED_ORIGINS: "${ALLOWED_ORIGINS:-https://tc.bido.dev}"
+      LINE_CHANNEL_ACCESS_TOKEN: "${LINE_CHANNEL_ACCESS_TOKEN}"
+      LINE_CHANNEL_SECRET: "${LINE_CHANNEL_SECRET}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: always
+    command: tunnel run
+    volumes:
+      - ./cloudflared:/etc/cloudflared:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      TUNNEL_TOKEN: "${CLOUDFLARE_TUNNEL_TOKEN}"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"

@@ -12,6 +12,15 @@ path = "src/main.rs"
 name = "import"
 path = "src/bin/import.rs"
 
+[lib]
+name = "rust_backend"
+path = "src/lib.rs"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
+http-body-util = "0.1"
+
 [dependencies]
 # Web framework
 axum = { version = "0.7", features = ["ws", "macros"] }

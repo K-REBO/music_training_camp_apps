@@ -1,27 +1,21 @@
-mod db;
-mod extractors;
-mod routes;
-mod scheduler;
-mod types;
-mod ws_state;
-
 use anyhow::Result;
-use axum::{
-    http::{HeaderValue, Method},
-    response::Json,
-    routing::get,
-    Router,
-};
+use axum::{routing::get, Router};
 use std::env;
 use tower::ServiceBuilder;
-use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::routes::kv::{delete_kv, get_or_list_kv, put_kv, set_kv};
-use crate::routes::ws::ws_handler;
-use crate::ws_state::new_ws_state;
+use rust_backend::{
+    build_cors, db, health_check,
+    routes::{
+        self as routes,
+        kv::{delete_kv, get_or_list_kv, put_kv, set_kv},
+        ws::ws_handler,
+    },
+    scheduler,
+    ws_state::new_ws_state,
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -137,31 +131,3 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn health_check() -> Json<serde_json::Value> {
-    Json(serde_json::json!({
-        "status": "ok",
-        "service": "rust-backend",
-        "version": env!("CARGO_PKG_VERSION")
-    }))
-}
-
-fn build_cors(allowed_origins_str: &str) -> CorsLayer {
-    let origins: Vec<HeaderValue> = allowed_origins_str
-        .split(',')
-        .filter_map(|s| s.trim().parse().ok())
-        .collect();
-
-    // Phase 4: 静的ファイルも同一オリジン配信のため、シンプルに Any を使用
-    // allow_credentials(true) と allow_headers(Any) は同時使用不可のため使わない
-    if origins.is_empty() {
-        CorsLayer::new()
-            .allow_origin(Any)
-            .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
-            .allow_headers(Any)
-    } else {
-        CorsLayer::new()
-            .allow_origin(origins)
-            .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
-            .allow_headers(Any)
-    }
-}

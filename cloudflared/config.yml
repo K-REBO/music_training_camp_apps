@@ -1,0 +1,11 @@
+# Cloudflare Tunnel 設定ファイル
+# TUNNEL_TOKEN 環境変数でトークン認証する場合はこのファイル不要
+# credentials-file 方式を使う場合はこのファイルを設定する
+
+# tunnel: YOUR_TUNNEL_ID
+# credentials-file: /etc/cloudflared/tunnel.json
+
+ingress:
+  - hostname: tc.bido.dev
+    service: http://app:8001
+  - service: http_status:404

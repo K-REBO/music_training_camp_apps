@@ -1575,6 +1575,7 @@ dependencies = [
  "futures",
  "hex",
  "hmac",
+ "http-body-util",
  "reqwest",
  "serde",
  "serde_json",
