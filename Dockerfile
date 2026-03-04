@@ -24,11 +24,11 @@ ENV SQLX_OFFLINE=true
 # 依存のみを先にキャッシュ（レイヤーキャッシュ最適化）
 COPY rust-backend/Cargo.toml rust-backend/Cargo.lock ./
 RUN mkdir -p src && echo 'fn main() {}' > src/main.rs && echo 'pub fn _noop() {}' > src/lib.rs && \
-    cargo build --release 2>/dev/null || true
+    cargo build --release --ignore-rust-version 2>/dev/null || true
 
 # ソース全体をコピーしてビルド
 COPY rust-backend/ ./
-RUN touch src/main.rs src/lib.rs && cargo build --release --bin rust-backend
+RUN touch src/main.rs src/lib.rs && cargo build --release --bin rust-backend --ignore-rust-version
 
 # ─────────────────────────────────────────────────────────────────
 # Stage 3: 最終ランタイムイメージ
