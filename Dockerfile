@@ -13,7 +13,7 @@ RUN bun run build
 # ─────────────────────────────────────────────────────────────────
 # Stage 2: Rust ビルド
 # ─────────────────────────────────────────────────────────────────
-FROM rust:1.83-slim AS rust-builder
+FROM rust:1.85-slim AS rust-builder
 WORKDIR /app/rust-backend
 
 RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
